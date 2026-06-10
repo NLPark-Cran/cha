@@ -187,16 +187,25 @@ def get_fetcher() -> EastMoneyFetcher:
 
 
 def fetch_constituents_data() -> List[Dict]:
-    """获取观猹概念股成分股的实时数据"""
+    """获取观猹概念股成分股的实时数据（默认22只）"""
+    return fetch_stocks_by_codes(config.CONSTITUENTS)
+
+
+def fetch_stocks_by_codes(stock_list) -> List[Dict]:
+    """获取指定成分股列表的实时数据
+    stock_list: [(code, name, sector), ...]
+    """
     fetcher = get_fetcher()
-    codes = [c[0] for c in config.CONSTITUENTS]
+    codes = [c[0] for c in stock_list]
+    if not codes:
+        return []
     raw_data = fetcher.fetch_specific_stocks(codes)
     parsed = []
     for raw in raw_data:
         item = fetcher.parse_stock_data(raw)
         if item:
             # 补充板块信息
-            for code, name, sector in config.CONSTITUENTS:
+            for code, name, sector in stock_list:
                 if code == item["code"]:
                     item["sector"] = sector
                     break

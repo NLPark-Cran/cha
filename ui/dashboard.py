@@ -2,6 +2,7 @@
 仪表盘页面 - 核心数据展示
 """
 
+import sys
 import flet as ft
 from data.cache import cache
 from utils.helpers import format_number, format_volume, change_color, change_icon
@@ -13,6 +14,14 @@ class DashboardPage:
 
     def __init__(self, page: ft.Page):
         self.page = page
+
+    def _is_logged_in(self) -> bool:
+        """检查是否已登录"""
+        main_mod = sys.modules.get("__main__")
+        if main_mod and hasattr(main_mod, "get_session_data"):
+            session = main_mod.get_session_data(self.page.session.id)
+            return bool(session.get("access_token"))
+        return False
 
     def _build_index_card(self) -> ft.Control:
         """指数大卡片"""
@@ -218,9 +227,31 @@ class DashboardPage:
             bgcolor=ft.Colors.WHITE,
         )
 
+    def _build_login_prompt(self, title: str) -> ft.Control:
+        """未登录提示卡片"""
+        return ft.Card(
+            content=ft.Container(
+                content=ft.Column(
+                    [
+                        ft.Icon(ft.Icons.LOCK_OUTLINE, size=32, color=ft.Colors.GREY_300),
+                        ft.Text(title, size=13, color=ft.Colors.GREY_500),
+                        ft.Text("登录后查看", size=11, color=ft.Colors.GREY_400),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=4,
+                ),
+                padding=ft.Padding(20, 20, 20, 20),
+                alignment=ft.Alignment(0, 0),
+            ),
+            elevation=1,
+            bgcolor=ft.Colors.WHITE,
+        )
+
     def build(self) -> ft.Control:
         """构建仪表盘页面"""
         data = cache.get_index_data()
+        is_login = self._is_logged_in()
 
         return ft.Column(
             [
@@ -228,7 +259,7 @@ class DashboardPage:
                 ft.ResponsiveRow(
                     [
                         ft.Column([self._build_index_card()], col={"xs": 12, "sm": 12, "md": 6, "lg": 6, "xl": 6}),
-                        ft.Column([self._build_market_breadth()], col={"xs": 12, "sm": 12, "md": 6, "lg": 6, "xl": 6}),
+                        ft.Column([self._build_market_breadth() if is_login else self._build_login_prompt("涨跌分布")], col={"xs": 12, "sm": 12, "md": 6, "lg": 6, "xl": 6}),
                     ],
                     spacing=16,
                     run_spacing=16,
@@ -237,9 +268,9 @@ class DashboardPage:
                 # 第二行: 领涨领跌 + 走势图
                 ft.ResponsiveRow(
                     [
-                        ft.Column([self._build_top_movers("🔥 领涨榜", data.get("top_gainers", []))], col={"xs": 12, "sm": 6, "md": 4, "lg": 4, "xl": 4}),
-                        ft.Column([self._build_top_movers("❄️ 领跌榜", data.get("top_losers", []))], col={"xs": 12, "sm": 6, "md": 4, "lg": 4, "xl": 4}),
-                        ft.Column([self._build_intraday_chart()], col={"xs": 12, "sm": 12, "md": 4, "lg": 4, "xl": 4}),
+                        ft.Column([self._build_top_movers("🔥 领涨榜", data.get("top_gainers", [])) if is_login else self._build_login_prompt("领涨榜")], col={"xs": 12, "sm": 6, "md": 4, "lg": 4, "xl": 4}),
+                        ft.Column([self._build_top_movers("❄️ 领跌榜", data.get("top_losers", [])) if is_login else self._build_login_prompt("领跌榜")], col={"xs": 12, "sm": 6, "md": 4, "lg": 4, "xl": 4}),
+                        ft.Column([self._build_intraday_chart() if is_login else self._build_login_prompt("日内走势")], col={"xs": 12, "sm": 12, "md": 4, "lg": 4, "xl": 4}),
                     ],
                     spacing=16,
                     run_spacing=16,

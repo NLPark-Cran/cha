@@ -52,11 +52,47 @@ class Storage:
                     UNIQUE(date, time, code)
                 )
             """)
+            # 用户表
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    watcha_user_id TEXT UNIQUE NOT NULL,
+                    nickname TEXT,
+                    avatar_url TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    last_login_at TEXT
+                )
+            """)
+            # 登录记录表
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS login_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    login_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    ip TEXT,
+                    user_agent TEXT
+                )
+            """)
+            # 用户自定义成分股表
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS user_portfolios (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    code TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    sector TEXT,
+                    added_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, code)
+                )
+            """)
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_index_date ON index_history(date)
             """)
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_stock_date ON stock_history(date, code)
+            """)
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_login_user ON login_logs(user_id)
             """)
             conn.commit()
 

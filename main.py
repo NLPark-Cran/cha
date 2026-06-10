@@ -22,9 +22,10 @@ from data.fetcher import fetch_constituents_data
 from data.calculator import calculator
 from data.cache import cache
 from data.storage import storage
+from data.user_service import user_service
 from auth.oauth import watcha_oauth
 
-# 内存会话存储: session_id -> {token, userinfo}
+# 内存会话存储: session_id -> {token, userinfo, user_id}
 _user_sessions: dict = {}
 
 
@@ -57,6 +58,81 @@ async def background_refresh(page: ft.Page):
         except Exception as e:
             print(f"[Background] Refresh error: {e}")
         await asyncio.sleep(config.REFRESH_INTERVAL)
+
+
+async def persist_login(page: ft.Page, access_token: str, refresh_token: str, expires_in: int, userinfo: dict):
+    """将登录信息持久化到 SharedPreferences 和数据库"""
+    prefs = ft.SharedPreferences()
+    await prefs.set("access_token", access_token)
+    await prefs.set("refresh_token", refresh_token or "")
+    await prefs.set("userinfo", json.dumps(userinfo))
+
+    # 同步到数据库
+    watcha_id = userinfo.get("id") or userinfo.get("sub") or userinfo.get("nickname", "")
+    db_user = user_service.get_or_create_user(
+        watcha_user_id=watcha_id,
+        nickname=userinfo.get("nickname", ""),
+        avatar_url=userinfo.get("avatar_url", ""),
+    )
+    user_service.record_login(db_user["id"])
+
+    # 设置内存会话
+    set_session_data(page.session.id, {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "expires_in": expires_in,
+        "userinfo": userinfo,
+        "user_id": db_user["id"],
+    })
+    print(f"[OAuth] Login persisted for user {db_user['id']} ({userinfo.get('nickname', '')})")
+
+
+async def restore_session(page: ft.Page):
+    """从 SharedPreferences 恢复登录会话"""
+    try:
+        prefs = ft.SharedPreferences()
+        access_token = await prefs.get("access_token")
+        if not access_token:
+            return
+
+        # 验证 token 有效性
+        userinfo = watcha_oauth.get_userinfo(access_token)
+        if not userinfo:
+            # Token 已失效，清除
+            await prefs.remove("access_token")
+            await prefs.remove("refresh_token")
+            await prefs.remove("userinfo")
+            return
+
+        # 恢复数据库用户记录
+        watcha_id = userinfo.get("id") or userinfo.get("sub") or userinfo.get("nickname", "")
+        db_user = user_service.get_or_create_user(
+            watcha_user_id=watcha_id,
+            nickname=userinfo.get("nickname", ""),
+            avatar_url=userinfo.get("avatar_url", ""),
+        )
+
+        set_session_data(page.session.id, {
+            "access_token": access_token,
+            "refresh_token": await prefs.get("refresh_token") or "",
+            "userinfo": userinfo,
+            "user_id": db_user["id"],
+        })
+        print(f"[Session] Restored for user {db_user['id']} ({userinfo.get('nickname', '')})")
+        page.update()
+    except Exception as e:
+        print(f"[Session] Restore failed: {e}")
+
+
+async def clear_persistent_login():
+    """清除持久化登录信息"""
+    try:
+        prefs = ft.SharedPreferences()
+        await prefs.remove("access_token")
+        await prefs.remove("refresh_token")
+        await prefs.remove("userinfo")
+    except Exception as e:
+        print(f"[Session] Clear persistent login failed: {e}")
 
 
 def handle_oauth_callback(page: ft.Page):
@@ -92,18 +168,12 @@ def handle_oauth_callback(page: ft.Page):
         page.show_dialog(ft.SnackBar(content=ft.Text("获取用户信息失败")))
         return
 
-    # 存储到内存会话
-    session_id = page.session.id
-    set_session_data(session_id, {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "expires_in": expires_in,
-        "userinfo": userinfo,
-    })
-
     nickname = userinfo.get("nickname", "观猹用户")
     print(f"[OAuth] Login success: {nickname}")
     page.show_dialog(ft.SnackBar(content=ft.Text(f"欢迎回来，{nickname}!")))
+
+    # 持久化登录信息
+    page.run_task(persist_login, page, access_token, refresh_token, expires_in, userinfo)
 
     # 清除 URL 中的 code 参数，不刷新页面
     page.run_task(page.push_route, "/")
@@ -124,6 +194,9 @@ def main(page: ft.Page):
 
     # 启动后台数据刷新
     page.run_task(background_refresh, page)
+
+    # 尝试恢复之前的登录会话
+    page.run_task(restore_session, page)
 
     # 检查 OAuth 回调
     handle_oauth_callback(page)
