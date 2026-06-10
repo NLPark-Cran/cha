@@ -1,0 +1,17 @@
+[Unit]
+Description=股猹猹 - 观猹概念股指实时追踪
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/workspace/test0607/cha
+Environment=PATH=/root/workspace/test0607/cha/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/root/workspace/test0607/cha/venv/bin/python /root/workspace/test0607/cha/main.py --port 8501 --host 127.0.0.1
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
