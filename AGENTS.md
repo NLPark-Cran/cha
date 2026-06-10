@@ -110,9 +110,26 @@ nginx 反向代理到 `127.0.0.1:8501`，SSL 由 certbot 管理。
 - **延迟**: 约 3 秒
 - **成分股**: 22 只 A 股，覆盖 AI 算力/应用/芯片/云计算/营销/机器人
 
+## 外部 AI 辅助 (mmx-cli)
+
+项目中遇到困难时，可以使用 MiniMax CLI (`mmx`) 获取第二意见：
+
+```bash
+# 已配置 API Key，直接使用
+mmx search query "关键词" --output json --quiet
+mmx text chat --message "技术问题" --output json --quiet
+
+# 常用场景
+mmx search query "Flet 0.85 OAuth web 登录持久化方案" --output json --quiet
+mmx search query "观猹 watcha.cn 创始人 仲泰" --output json --quiet
+```
+
+Skill 文档：`/root/.agents/skills/mmx-cli/SKILL.md`
+
 ## 登录
 
 - 仅支持 watcha.cn OAuth2.0
 - PKCE + Authorization Code 流程
 - `code_verifier` 编码在 OAuth state 参数中传递（无需浏览器存储）
 - 开发环境凭据：`client_id=1p9Mcr+CNLPAMFC0`
+- 登录状态持久化：`ft.SharedPreferences` (浏览器 localStorage) + 内存 session

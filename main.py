@@ -146,42 +146,50 @@ def handle_oauth_callback(page: ft.Page):
     error = query_dict.get("error")
     error_desc = query_dict.get("error_description", "")
 
+    print(f"[OAuth] Callback triggered. code={'yes' if code else 'no'}, state={'yes' if state else 'no'}, error={error}")
+    print(f"[OAuth] Query dict keys: {list(query_dict.keys())}")
+
     if error:
         print(f"[OAuth] Error from Watcha: {error} - {error_desc}")
-        page.show_dialog(ft.SnackBar(content=ft.Text(f"登录失败: {error}")))
         return
 
     if not code or not state:
+        print("[OAuth] No code or state, skipping")
         return
 
     # 避免重复处理同一个 code（包括已处理和已失败的）
     if code in _processed_codes:
+        print(f"[OAuth] Code already processed, skipping")
         return
     _processed_codes.add(code)
 
+    print(f"[OAuth] Exchanging code for token...")
     # 用 code + state 换取 token (state 中包含 code_verifier)
     token_data = watcha_oauth.exchange_code(code, state)
+    print(f"[OAuth] Token response: {token_data}")
     if not token_data or "access_token" not in token_data:
-        print(f"[OAuth] Failed to exchange code: {token_data}")
-        page.show_dialog(ft.SnackBar(content=ft.Text("换取 Token 失败，请重试")))
+        print(f"[OAuth] Failed to exchange code")
         return
 
     access_token = token_data["access_token"]
     refresh_token = token_data.get("refresh_token")
     expires_in = token_data.get("expires_in", 1800)
+    print(f"[OAuth] Got access_token (len={len(access_token)}), refresh={'yes' if refresh_token else 'no'}")
 
     # 获取用户信息
+    print(f"[OAuth] Fetching userinfo...")
     userinfo = watcha_oauth.get_userinfo(access_token)
+    print(f"[OAuth] Userinfo response: {userinfo}")
     if not userinfo:
-        page.show_dialog(ft.SnackBar(content=ft.Text("获取用户信息失败")))
+        print("[OAuth] Get userinfo returned None")
         return
 
     nickname = userinfo.get("nickname", "观猹用户")
-    print(f"[OAuth] Login success: {nickname}")
-    page.show_dialog(ft.SnackBar(content=ft.Text(f"欢迎回来，{nickname}!")))
+    print(f"[OAuth] Login success: {nickname}, userinfo keys: {list(userinfo.keys())}")
 
     # 同步获取/创建数据库用户，得到 user_id
     watcha_id = userinfo.get("id") or userinfo.get("sub") or userinfo.get("nickname", "")
+    print(f"[OAuth] watcha_id: {watcha_id}")
     db_user = user_service.get_or_create_user(
         watcha_user_id=watcha_id,
         nickname=userinfo.get("nickname", ""),
@@ -189,6 +197,7 @@ def handle_oauth_callback(page: ft.Page):
     )
     user_id = db_user["id"]
     user_service.record_login(user_id)
+    print(f"[OAuth] DB user: id={user_id}, watcha_id={watcha_id}")
 
     # 同步设置内存会话，让 UI 立即更新
     set_session_data(page.session.id, {
@@ -198,6 +207,7 @@ def handle_oauth_callback(page: ft.Page):
         "userinfo": userinfo,
         "user_id": user_id,
     })
+    print(f"[OAuth] Session set for {page.session.id}, keys: {list(_user_sessions.get(page.session.id, {}).keys())}")
 
     # 异步持久化到 localStorage 和数据库
     page.run_task(persist_login, page, access_token, refresh_token, expires_in, userinfo)
