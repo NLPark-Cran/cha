@@ -57,7 +57,7 @@ class ChartPage:
         plt.tight_layout()
 
         img_src = _fig_to_base64(fig)
-        return ft.Image(src=img_src, fit=ft.ImageFit.CONTAIN, expand=True)
+        return ft.Image(src=img_src, fit=ft.BoxFit.CONTAIN, expand=True)
 
     def _build_stock_kline(self) -> ft.Control:
         """个股K线图"""
@@ -105,7 +105,7 @@ class ChartPage:
         plt.tight_layout()
 
         img_src = _fig_to_base64(fig)
-        return ft.Image(src=img_src, fit=ft.ImageFit.CONTAIN, expand=True)
+        return ft.Image(src=img_src, fit=ft.BoxFit.CONTAIN, expand=True)
 
     def _period_label(self) -> str:
         return {"daily": "日线", "weekly": "周线", "monthly": "月线"}.get(self.period, "日线")

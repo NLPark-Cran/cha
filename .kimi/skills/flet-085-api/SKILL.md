@@ -237,7 +237,20 @@ page.launch_url(url, web_popup_window_name="_self")
 page.launch_url(url, web_popup_window_name=ft.UrlTarget.BLANK)
 ```
 
-注意：`launch_url` 是**同步方法**，不需要 `await`。
+**⚠️ 重要陷阱**：`page.launch_url` 在源码中是 `async def`，但被 `@deprecated` 装饰器包装后，`inspect.iscoroutinefunction()` 返回 `False`，容易误判为同步方法。**实际必须用 `await` 或 `page.run_task()` 调用。**
+
+```python
+# ❌ 错误 - 同步调用，协程被创建但永不执行
+page.launch_url(url, web_popup_window_name="_self")
+
+# ✅ 正确 - 在 async 函数中 await
+async def open_link():
+    await page.launch_url(url, web_popup_window_name="_self")
+
+# ✅ 正确 - 在同步回调中用 page.run_task
+def on_click(e):
+    page.run_task(open_link)
+```
 
 ---
 
@@ -304,6 +317,18 @@ ft.Image(src_base64=b64_string)
 # ✅ 0.85 正确写法 - 使用 data URI
 ft.Image(src=f"data:image/png;base64,{b64_string}")
 ```
+
+### 8.2 Image fit 参数
+
+```python
+# ❌ 旧写法
+ft.Image(src=..., fit=ft.ImageFit.CONTAIN)
+
+# ✅ 0.85 正确写法
+ft.Image(src=..., fit=ft.BoxFit.CONTAIN)
+```
+
+`ft.BoxFit` 取值：`CONTAIN`, `COVER`, `FILL`, `FIT_HEIGHT`, `FIT_WIDTH`, `NONE`, `SCALE_DOWN`
 
 ---
 

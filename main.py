@@ -106,7 +106,11 @@ def handle_oauth_callback(page: ft.Page):
     page.show_dialog(ft.SnackBar(content=ft.Text(f"欢迎回来，{nickname}!")))
 
     # 清除 URL 中的 code 参数 (刷新页面到根路径)
-    page.launch_url("/", web_popup_window_name="_self")
+    page.run_task(_async_redirect, page)
+
+
+async def _async_redirect(page: ft.Page):
+    await page.launch_url("/", web_popup_window_name="_self")
 
 
 def main(page: ft.Page):

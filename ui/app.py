@@ -52,7 +52,10 @@ class ChaApp:
         """点击登录按钮"""
         pkce = watcha_oauth.generate_pkce()
         auth_url = watcha_oauth.build_auth_url(pkce, scope="read")
-        self.page.launch_url(auth_url, web_popup_window_name="_self")
+        self.page.run_task(self._async_launch_url, auth_url)
+
+    async def _async_launch_url(self, url: str):
+        await self.page.launch_url(url, web_popup_window_name="_self")
 
     def _on_logout_click(self, e: ft.ControlEvent):
         """登出"""
