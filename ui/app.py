@@ -1,9 +1,11 @@
 """
-Flet 应用主框架 - 导航、主题、路由
+Flet 应用主框架 - 导航、主题、路由、登录
 """
 
+import json
 import flet as ft
 import config
+from auth.oauth import watcha_oauth
 from ui.dashboard import DashboardPage
 from ui.constituents import ConstituentsPage
 from ui.chart_page import ChartPage
@@ -29,6 +31,84 @@ class ChaApp:
             expand=True,
             padding=ft.padding.all(20),
         )
+
+    def _get_userinfo(self) -> dict:
+        """从 client_storage 获取用户信息"""
+        try:
+            raw = self.page.client_storage.get("watcha_userinfo")
+            if raw:
+                return json.loads(raw)
+        except Exception:
+            pass
+        return {}
+
+    def _is_logged_in(self) -> bool:
+        """检查是否已登录"""
+        return bool(self.page.client_storage.get("watcha_access_token"))
+
+    def _on_login_click(self, e: ft.ControlEvent):
+        """点击登录按钮"""
+        pkce = watcha_oauth.generate_pkce()
+        state = watcha_oauth.generate_state()
+
+        # 保存到 client_storage
+        self.page.client_storage.set("watcha_oauth_state", state)
+        self.page.client_storage.set("watcha_code_verifier", pkce["code_verifier"])
+
+        # 构建授权 URL
+        auth_url = watcha_oauth.build_auth_url(state, pkce, scope="read")
+
+        # 使用 JavaScript 跳转 (替换当前页面)
+        self.page.launch_url(auth_url, web_window_name="_self")
+
+    def _on_logout_click(self, e: ft.ControlEvent):
+        """登出"""
+        self.page.client_storage.remove("watcha_access_token")
+        self.page.client_storage.remove("watcha_refresh_token")
+        self.page.client_storage.remove("watcha_userinfo")
+        self.page.open(ft.SnackBar(content=ft.Text("已退出登录")))
+        self.page.update()
+
+    def _build_user_widget(self) -> ft.Control:
+        """构建用户登录状态控件"""
+        if self._is_logged_in():
+            userinfo = self._get_userinfo()
+            nickname = userinfo.get("nickname", "观猹用户")
+            avatar_url = userinfo.get("avatar_url", "")
+
+            return ft.PopupMenuButton(
+                content=ft.Row(
+                    [
+                        ft.CircleAvatar(
+                            foreground_image_src=avatar_url if avatar_url else None,
+                            content=ft.Text(nickname[:1]) if not avatar_url else None,
+                            radius=16,
+                            bgcolor=config.BRAND_COLOR,
+                        ),
+                        ft.Text(nickname, size=13, color=ft.Colors.GREY_700),
+                        ft.Icon(ft.Icons.ARROW_DROP_DOWN, size=16, color=ft.Colors.GREY_500),
+                    ],
+                    spacing=6,
+                ),
+                items=[
+                    ft.PopupMenuItem(
+                        text="退出登录",
+                        icon=ft.Icons.LOGOUT,
+                        on_click=self._on_logout_click,
+                    ),
+                ],
+            )
+        else:
+            return ft.ElevatedButton(
+                "观猹登录",
+                icon=ft.Icons.LOGIN,
+                on_click=self._on_login_click,
+                style=ft.ButtonStyle(
+                    bgcolor=config.BRAND_COLOR,
+                    foreground_color=ft.Colors.WHITE,
+                    padding=ft.padding.symmetric(horizontal=16, vertical=8),
+                ),
+            )
 
     def on_nav_change(self, e: ft.ControlEvent):
         """导航切换"""
@@ -72,7 +152,11 @@ class ChaApp:
                         ],
                         spacing=4,
                     ),
-                    padding=ft.padding.only(right=20),
+                    padding=ft.padding.only(right=12),
+                ),
+                ft.Container(
+                    content=self._build_user_widget(),
+                    padding=ft.padding.only(right=16),
                 ),
             ],
         )

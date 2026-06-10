@@ -3,3 +3,4 @@ akshare==1.18.64
 plotly==6.8.0
 pandas==3.0.3
 numpy==2.4.6
+itsdangerous==2.2.0
