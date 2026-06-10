@@ -32,7 +32,7 @@ class DashboardPage:
                             [
                                 ft.Text(
                                     f"{value:,.2f}",
-                                    size=48,
+                                    size=42,
                                     weight=ft.FontWeight.BOLD,
                                     color=color,
                                 ),
@@ -43,13 +43,13 @@ class DashboardPage:
                             [
                                 ft.Text(
                                     f"{icon} {change_pct:+.2f}%",
-                                    size=20,
+                                    size=18,
                                     weight=ft.FontWeight.BOLD,
                                     color=color,
                                 ),
                                 ft.Text(
                                     f"{change_amt:+.2f}",
-                                    size=16,
+                                    size=14,
                                     color=color,
                                 ),
                             ],
@@ -69,7 +69,7 @@ class DashboardPage:
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
-                padding=ft.Padding(24, 24, 24, 24),
+                padding=ft.Padding(20, 20, 20, 20),
             ),
             elevation=2,
             bgcolor=ft.Colors.WHITE,
@@ -82,12 +82,8 @@ class DashboardPage:
         down = data.get("down_count", 0)
         flat = data.get("flat_count", 0)
         total = up + down + flat
-
         if total == 0:
             total = 1
-
-        up_pct = up / total * 100
-        down_pct = down / total * 100
 
         return ft.Card(
             content=ft.Container(
@@ -98,88 +94,30 @@ class DashboardPage:
                             [
                                 ft.Column(
                                     [
-                                        ft.Text(str(up), size=28, weight=ft.FontWeight.BOLD, color="#E74C3C"),
-                                        ft.Text("上涨", size=12, color=ft.Colors.GREY_500),
+                                        ft.Text(str(up), size=24, weight=ft.FontWeight.BOLD, color="#E74C3C"),
+                                        ft.Text("上涨", size=11, color=ft.Colors.GREY_500),
                                     ],
                                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                                 ),
                                 ft.Column(
                                     [
-                                        ft.Text(str(down), size=28, weight=ft.FontWeight.BOLD, color="#27AE60"),
-                                        ft.Text("下跌", size=12, color=ft.Colors.GREY_500),
+                                        ft.Text(str(down), size=24, weight=ft.FontWeight.BOLD, color="#27AE60"),
+                                        ft.Text("下跌", size=11, color=ft.Colors.GREY_500),
                                     ],
                                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                                 ),
                                 ft.Column(
                                     [
-                                        ft.Text(str(flat), size=28, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_500),
-                                        ft.Text("平盘", size=12, color=ft.Colors.GREY_500),
+                                        ft.Text(str(flat), size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_500),
+                                        ft.Text("平盘", size=11, color=ft.Colors.GREY_500),
                                     ],
                                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                                 ),
                             ],
                             alignment=ft.MainAxisAlignment.SPACE_EVENLY,
                         ),
-                        ft.Divider(height=8, color=ft.Colors.TRANSPARENT),
-                        # 进度条
-                        ft.Row(
-                            [
-                                ft.Container(
-                                    bgcolor="#E74C3C",
-                                    height=6,
-                                    border_radius=ft.BorderRadius(3, 3, 3, 3),
-                                    width=up_pct * 2.5,
-                                ),
-                                ft.Container(
-                                    bgcolor="#27AE60",
-                                    height=6,
-                                    border_radius=ft.BorderRadius(3, 3, 3, 3),
-                                    width=down_pct * 2.5,
-                                ),
-                            ],
-                            spacing=2,
-                        ),
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
-                ),
-                padding=ft.Padding(20, 20, 20, 20),
-            ),
-            elevation=2,
-            bgcolor=ft.Colors.WHITE,
-        )
-
-    def _build_top_movers(self, title: str, stocks: list, gainers: bool = True) -> ft.Control:
-        """涨跌幅排行列表"""
-        rows = []
-        for i, s in enumerate(stocks[:5], 1):
-            color = change_color(s.get("change_pct", 0))
-            rows.append(
-                ft.Row(
-                    [
-                        ft.Text(str(i), size=12, color=ft.Colors.GREY_400, width=20),
-                        ft.Text(s.get("name", ""), size=13, expand=True),
-                        ft.Text(f"{s.get('price',0):.2f}", size=13, width=60, text_align=ft.TextAlign.RIGHT),
-                        ft.Text(
-                            f"{s.get('change_pct',0):+.2f}%",
-                            size=13,
-                            color=color,
-                            width=70,
-                            text_align=ft.TextAlign.RIGHT,
-                        ),
-                    ],
-                    spacing=8,
-                )
-            )
-
-        return ft.Card(
-            content=ft.Container(
-                content=ft.Column(
-                    [
-                        ft.Text(title, size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
-                        ft.Divider(height=8),
-                        *rows,
-                    ],
-                    spacing=10,
                 ),
                 padding=ft.Padding(16, 16, 16, 16),
             ),
@@ -187,30 +125,69 @@ class DashboardPage:
             bgcolor=ft.Colors.WHITE,
         )
 
+    def _build_top_movers(self, title: str, stocks: list) -> ft.Control:
+        """涨跌幅排行列表"""
+        rows = []
+        for i, s in enumerate(stocks[:5], 1):
+            color = change_color(s.get("change_pct", 0))
+            rows.append(
+                ft.Row(
+                    [
+                        ft.Text(str(i), size=11, color=ft.Colors.GREY_400, width=18),
+                        ft.Text(s.get("name", ""), size=12, expand=True),
+                        ft.Text(f"{s.get('change_pct',0):+.2f}%", size=12, color=color, width=65, text_align=ft.TextAlign.RIGHT),
+                    ],
+                    spacing=6,
+                )
+            )
+
+        return ft.Card(
+            content=ft.Container(
+                content=ft.Column(
+                    [
+                        ft.Text(title, size=13, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
+                        ft.Divider(height=6),
+                        *rows,
+                    ],
+                    spacing=8,
+                ),
+                padding=ft.Padding(12, 12, 12, 12),
+            ),
+            elevation=2,
+            bgcolor=ft.Colors.WHITE,
+        )
+
     def _build_intraday_chart(self) -> ft.Control:
-        """日内走势图 (使用简单折线表示)"""
+        """日内走势简览"""
         history = cache.get_history()
         if len(history) < 2:
             return ft.Card(
                 content=ft.Container(
-                    content=ft.Text("数据收集中，走势图将在刷新后显示...", color=ft.Colors.GREY_400),
-                    padding=ft.Padding(40, 40, 40, 40),
+                    content=ft.Text("数据收集中...", color=ft.Colors.GREY_400),
+                    padding=ft.Padding(20, 20, 20, 20),
                     alignment=ft.Alignment(0, 0),
                 ),
                 elevation=2,
+                bgcolor=ft.Colors.WHITE,
             )
 
-        # 简单文本形式展示最新几个点位
-        recent = history[-10:]
+        recent = history[-8:]
         dots = []
         for h in recent:
             color = change_color(h.get("change_pct", 0))
             dots.append(
                 ft.Container(
-                    content=ft.Text(f"{h['value']:.1f}", size=10, color=color),
+                    content=ft.Column(
+                        [
+                            ft.Text(f"{h['value']:.1f}", size=10, color=color, weight=ft.FontWeight.BOLD),
+                            ft.Text(h["time"][-5:], size=8, color=ft.Colors.GREY_400),
+                        ],
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        spacing=0,
+                    ),
                     bgcolor=ft.Colors.WHITE,
                     border_radius=ft.BorderRadius(4, 4, 4, 4),
-                    padding=ft.Padding(6, 2, 6, 2),
+                    padding=ft.Padding(4, 2, 4, 2),
                     border=ft.Border(
                         top=ft.BorderSide(1, ft.Colors.GREY_200),
                         right=ft.BorderSide(1, ft.Colors.GREY_200),
@@ -226,16 +203,16 @@ class DashboardPage:
                     [
                         ft.Row(
                             [
-                                ft.Text("日内走势", size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
-                                ft.Text(f"共{len(history)}个数据点", size=11, color=ft.Colors.GREY_400),
+                                ft.Text("日内走势", size=13, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
+                                ft.Text(f"{len(history)}点", size=10, color=ft.Colors.GREY_400),
                             ],
                             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                         ),
-                        ft.Divider(height=8),
+                        ft.Divider(height=6),
                         ft.Row(dots, wrap=True, spacing=4, run_spacing=4),
                     ],
                 ),
-                padding=ft.Padding(16, 16, 16, 16),
+                padding=ft.Padding(12, 12, 12, 12),
             ),
             elevation=2,
             bgcolor=ft.Colors.WHITE,
@@ -248,28 +225,24 @@ class DashboardPage:
         return ft.Column(
             [
                 # 第一行: 指数卡片 + 涨跌分布
-                ft.Row(
+                ft.ResponsiveRow(
                     [
-                        ft.Container(content=self._build_index_card(), expand=1),
-                        ft.Container(content=self._build_market_breadth(), expand=1),
+                        ft.Column([self._build_index_card()], col={"xs": 12, "sm": 12, "md": 6, "lg": 6, "xl": 6}),
+                        ft.Column([self._build_market_breadth()], col={"xs": 12, "sm": 12, "md": 6, "lg": 6, "xl": 6}),
                     ],
-                    wrap=True,
                     spacing=16,
                     run_spacing=16,
-                    alignment=ft.MainAxisAlignment.START,
                 ),
                 ft.Divider(height=16, color=ft.Colors.TRANSPARENT),
                 # 第二行: 领涨领跌 + 走势图
-                ft.Row(
+                ft.ResponsiveRow(
                     [
-                        ft.Container(content=self._build_top_movers("🔥 领涨榜", data.get("top_gainers", []), True), expand=1),
-                        ft.Container(content=self._build_top_movers("❄️ 领跌榜", data.get("top_losers", []), False), expand=1),
-                        ft.Container(content=self._build_intraday_chart(), expand=2),
+                        ft.Column([self._build_top_movers("🔥 领涨榜", data.get("top_gainers", []))], col={"xs": 12, "sm": 6, "md": 4, "lg": 4, "xl": 4}),
+                        ft.Column([self._build_top_movers("❄️ 领跌榜", data.get("top_losers", []))], col={"xs": 12, "sm": 6, "md": 4, "lg": 4, "xl": 4}),
+                        ft.Column([self._build_intraday_chart()], col={"xs": 12, "sm": 12, "md": 4, "lg": 4, "xl": 4}),
                     ],
-                    wrap=True,
                     spacing=16,
                     run_spacing=16,
-                    alignment=ft.MainAxisAlignment.START,
                 ),
             ],
             scroll=ft.ScrollMode.AUTO,
@@ -281,8 +254,8 @@ def _mini_stat(label: str, value: str, color: str) -> ft.Control:
     """小统计项"""
     return ft.Column(
         [
-            ft.Text(value, size=16, weight=ft.FontWeight.BOLD, color=color),
-            ft.Text(label, size=11, color=ft.Colors.GREY_500),
+            ft.Text(value, size=14, weight=ft.FontWeight.BOLD, color=color),
+            ft.Text(label, size=10, color=ft.Colors.GREY_500),
         ],
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         spacing=2,

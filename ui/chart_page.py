@@ -1,13 +1,27 @@
 """
-走势图页面 - 使用 Plotly 展示指数和个股走势
+走势图页面 - 使用 matplotlib 生成图表
 """
 
+import base64
+import io
 import flet as ft
 from data.cache import cache
 from data.fetcher import fetch_stock_history
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import config
+
+
+def _fig_to_base64(fig) -> str:
+    """将 matplotlib Figure 转为 base64 data URI"""
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png', dpi=100, bbox_inches='tight',
+                facecolor='white', edgecolor='none')
+    buf.seek(0)
+    img_b64 = base64.b64encode(buf.read()).decode()
+    plt.close(fig)
+    return f"data:image/png;base64,{img_b64}"
 
 
 class ChartPage:
@@ -28,36 +42,22 @@ class ChartPage:
                 padding=ft.Padding(40, 40, 40, 40),
             )
 
-        times = [h["time"] for h in history]
+        times = [h["time"][-5:] for h in history]  # 只取 HH:MM
         values = [h["value"] for h in history]
-        changes = [h.get("change_pct", 0) for h in history]
 
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=times,
-            y=values,
-            mode='lines+markers',
-            name='观猹指数',
-            line=dict(color=config.BRAND_COLOR, width=2),
-            marker=dict(size=4),
-            fill='tozeroy',
-            fillcolor='rgba(58, 175, 120, 0.1)',
-        ))
+        fig, ax = plt.subplots(figsize=(8, 3.5))
+        ax.plot(times, values, color=config.BRAND_COLOR, linewidth=2, marker='o', markersize=3)
+        ax.fill_between(times, values, alpha=0.15, color=config.BRAND_COLOR)
+        ax.set_title("观猹概念股指 - 日内走势", fontsize=12, color='#333')
+        ax.set_xlabel("时间", fontsize=9)
+        ax.set_ylabel("指数点位", fontsize=9)
+        ax.grid(True, alpha=0.3)
+        ax.tick_params(labelsize=8)
+        plt.xticks(rotation=45)
+        plt.tight_layout()
 
-        fig.update_layout(
-            title=dict(text="观猹概念股指 - 日内走势", font=dict(size=16, color="#333")),
-            xaxis_title="时间",
-            yaxis_title="指数点位",
-            height=350,
-            margin=dict(l=50, r=20, t=50, b=40),
-            paper_bgcolor='white',
-            plot_bgcolor='white',
-            hovermode='x unified',
-        )
-        fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#eee')
-        fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#eee')
-
-        return ft.PlotlyChart(fig, expand=True)
+        img_src = _fig_to_base64(fig)
+        return ft.Image(src=img_src, fit=ft.ImageFit.CONTAIN, expand=True)
 
     def _build_stock_kline(self) -> ft.Control:
         """个股K线图"""
@@ -69,7 +69,6 @@ class ChartPage:
                 padding=ft.Padding(40, 40, 40, 40),
             )
 
-        # 默认选第一只
         stock = self.selected_stock or stocks[0]
         code = stock.get("code", "")
         name = stock.get("name", "")
@@ -82,54 +81,31 @@ class ChartPage:
                 padding=ft.Padding(40, 40, 40, 40),
             )
 
-        dates = [h["date"] for h in history]
-        opens = [h["open"] for h in history]
-        highs = [h["high"] for h in history]
-        lows = [h["low"] for h in history]
+        dates = [h["date"][5:] for h in history]  # 只取 MM-DD
         closes = [h["close"] for h in history]
         volumes = [h["volume"] for h in history]
 
-        fig = make_subplots(
-            rows=2, cols=1,
-            shared_xaxes=True,
-            vertical_spacing=0.05,
-            row_heights=[0.7, 0.3],
-        )
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 5), gridspec_kw={'height_ratios': [3, 1]})
 
-        fig.add_trace(go.Candlestick(
-            x=dates,
-            open=opens,
-            high=highs,
-            low=lows,
-            close=closes,
-            name=name,
-            increasing_line_color='#E74C3C',
-            decreasing_line_color='#27AE60',
-        ), row=1, col=1)
+        # 价格线
+        ax1.plot(dates, closes, color=config.BRAND_COLOR, linewidth=1.5)
+        ax1.set_title(f"{name} ({code}) - {self._period_label()}", fontsize=12, color='#333')
+        ax1.set_ylabel("价格", fontsize=9)
+        ax1.grid(True, alpha=0.3)
+        ax1.tick_params(labelsize=8)
 
-        fig.add_trace(go.Bar(
-            x=dates,
-            y=volumes,
-            name='成交量',
-            marker_color=config.BRAND_COLOR,
-            opacity=0.6,
-        ), row=2, col=1)
+        # 成交量
+        ax2.bar(dates, volumes, color=config.BRAND_COLOR, alpha=0.6, width=0.6)
+        ax2.set_ylabel("成交量", fontsize=9)
+        ax2.grid(True, alpha=0.3)
+        ax2.tick_params(labelsize=8)
 
-        fig.update_layout(
-            title=dict(text=f"{name} ({code}) - {self._period_label()}", font=dict(size=16, color="#333")),
-            height=450,
-            margin=dict(l=50, r=20, t=50, b=40),
-            paper_bgcolor='white',
-            plot_bgcolor='white',
-            showlegend=False,
-            xaxis_rangeslider_visible=False,
-        )
-        fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#eee')
-        fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#eee')
-        fig.update_yaxes(title_text="价格", row=1, col=1)
-        fig.update_yaxes(title_text="成交量", row=2, col=1)
+        plt.setp(ax1.xaxis.get_majorticklabels(), rotation=45)
+        plt.setp(ax2.xaxis.get_majorticklabels(), rotation=45)
+        plt.tight_layout()
 
-        return ft.PlotlyChart(fig, expand=True)
+        img_src = _fig_to_base64(fig)
+        return ft.Image(src=img_src, fit=ft.ImageFit.CONTAIN, expand=True)
 
     def _period_label(self) -> str:
         return {"daily": "日线", "weekly": "周线", "monthly": "月线"}.get(self.period, "日线")

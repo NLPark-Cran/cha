@@ -29,7 +29,7 @@ class ChaApp:
         self.content_area = ft.Container(
             content=self.pages[0].build(),
             expand=True,
-            padding=ft.Padding(20, 20, 20, 20),
+            padding=ft.Padding(16, 16, 16, 16),
         )
 
     def _get_session_data(self) -> dict:
@@ -76,13 +76,12 @@ class ChaApp:
                         ft.CircleAvatar(
                             foreground_image_src=avatar_url if avatar_url else None,
                             content=ft.Text(nickname[:1]) if not avatar_url else None,
-                            radius=16,
+                            radius=14,
                             bgcolor=config.BRAND_COLOR,
                         ),
-                        ft.Text(nickname, size=13, color=ft.Colors.GREY_700),
-                        ft.Icon(ft.Icons.ARROW_DROP_DOWN, size=16, color=ft.Colors.GREY_500),
+                        ft.Text(nickname, size=12, color=ft.Colors.GREY_700),
                     ],
-                    spacing=6,
+                    spacing=4,
                 ),
                 items=[
                     ft.PopupMenuItem(
@@ -94,13 +93,14 @@ class ChaApp:
             )
         else:
             return ft.ElevatedButton(
-                content=ft.Text("观猹登录"),
+                content=ft.Text("登录", size=12),
                 icon=ft.Icons.LOGIN,
+                icon_size=16,
                 on_click=self._on_login_click,
                 style=ft.ButtonStyle(
                     bgcolor=config.BRAND_COLOR,
                     color=ft.Colors.WHITE,
-                    padding=ft.Padding(16, 8, 16, 8),
+                    padding=ft.Padding(10, 6, 10, 6),
                 ),
             )
 
@@ -112,50 +112,25 @@ class ChaApp:
 
     def build(self) -> ft.Control:
         """构建应用布局"""
-        # 顶部标题栏
         app_bar = ft.AppBar(
             title=ft.Row(
                 [
-                    ft.Icon(ft.Icons.TRENDING_UP, color=config.BRAND_COLOR, size=28),
-                    ft.Text(
-                        config.APP_NAME,
-                        size=24,
-                        weight=ft.FontWeight.BOLD,
-                        color=config.BRAND_COLOR,
-                    ),
-                    ft.Text(
-                        f"| {config.APP_SUBTITLE}",
-                        size=14,
-                        color=ft.Colors.GREY_600,
-                    ),
+                    ft.Icon(ft.Icons.TRENDING_UP, color=config.BRAND_COLOR, size=22),
+                    ft.Text(config.APP_NAME, size=18, weight=ft.FontWeight.BOLD, color=config.BRAND_COLOR),
                 ],
-                spacing=8,
+                spacing=6,
             ),
             bgcolor=ft.Colors.WHITE,
             elevation=1,
+            center_title=False,
             actions=[
                 ft.Container(
-                    content=ft.Row(
-                        [
-                            ft.Icon(ft.Icons.SCHEDULE, size=14, color=ft.Colors.GREY_500),
-                            ft.Text(
-                                "实时更新",
-                                size=12,
-                                color=ft.Colors.GREY_500,
-                            ),
-                        ],
-                        spacing=4,
-                    ),
-                    padding=ft.Padding(0, 0, 12, 0),
-                ),
-                ft.Container(
                     content=self._build_user_widget(),
-                    padding=ft.Padding(0, 0, 16, 0),
+                    padding=ft.Padding(0, 0, 12, 0),
                 ),
             ],
         )
 
-        # 底部导航栏
         nav_bar = ft.NavigationBar(
             selected_index=self.current_page_index,
             on_change=self.on_nav_change,
@@ -178,7 +153,7 @@ class ChaApp:
                 ft.NavigationBarDestination(
                     icon=ft.Icons.PIE_CHART_OUTLINE_OUTLINED,
                     selected_icon=ft.Icons.PIE_CHART,
-                    label="板块分析",
+                    label="板块",
                 ),
                 ft.NavigationBarDestination(
                     icon=ft.Icons.INFO_OUTLINED,
@@ -188,6 +163,7 @@ class ChaApp:
             ],
             bgcolor=ft.Colors.WHITE,
             elevation=2,
+            label_behavior=ft.NavigationBarLabelBehavior.ONLY_SHOW_SELECTED,
         )
 
         return ft.Column(
