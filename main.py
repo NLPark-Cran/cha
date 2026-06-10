@@ -28,6 +28,9 @@ from auth.oauth import watcha_oauth
 # 内存会话存储: session_id -> {token, userinfo, user_id}
 _user_sessions: dict = {}
 
+# 已处理的 OAuth code，避免重复处理
+_processed_codes: set = set()
+
 
 def get_session_data(session_id: str) -> dict:
     """获取会话数据"""
@@ -151,6 +154,11 @@ def handle_oauth_callback(page: ft.Page):
     if not code or not state:
         return
 
+    # 避免重复处理同一个 code（包括已处理和已失败的）
+    if code in _processed_codes:
+        return
+    _processed_codes.add(code)
+
     # 用 code + state 换取 token (state 中包含 code_verifier)
     token_data = watcha_oauth.exchange_code(code, state)
     if not token_data or "access_token" not in token_data:
@@ -172,11 +180,27 @@ def handle_oauth_callback(page: ft.Page):
     print(f"[OAuth] Login success: {nickname}")
     page.show_dialog(ft.SnackBar(content=ft.Text(f"欢迎回来，{nickname}!")))
 
-    # 持久化登录信息
-    page.run_task(persist_login, page, access_token, refresh_token, expires_in, userinfo)
+    # 同步获取/创建数据库用户，得到 user_id
+    watcha_id = userinfo.get("id") or userinfo.get("sub") or userinfo.get("nickname", "")
+    db_user = user_service.get_or_create_user(
+        watcha_user_id=watcha_id,
+        nickname=userinfo.get("nickname", ""),
+        avatar_url=userinfo.get("avatar_url", ""),
+    )
+    user_id = db_user["id"]
+    user_service.record_login(user_id)
 
-    # 清除 URL 中的 code 参数，不刷新页面
-    page.run_task(page.push_route, "/")
+    # 同步设置内存会话，让 UI 立即更新
+    set_session_data(page.session.id, {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "expires_in": expires_in,
+        "userinfo": userinfo,
+        "user_id": user_id,
+    })
+
+    # 异步持久化到 localStorage 和数据库
+    page.run_task(persist_login, page, access_token, refresh_token, expires_in, userinfo)
 
 
 def main(page: ft.Page):
