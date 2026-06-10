@@ -57,7 +57,7 @@ class ChaApp:
         auth_url = watcha_oauth.build_auth_url(pkce, scope="read")
 
         # 使用 JavaScript 跳转 (替换当前页面)
-        self.page.launch_url(auth_url, web_window_name="_self")
+        self.page.launch_url(auth_url, web_popup_window_name="_self")
 
     def _on_logout_click(self, e: ft.ControlEvent):
         """登出"""
