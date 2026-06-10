@@ -38,7 +38,7 @@ class ConstituentsPage:
             header_cells.append(
                 ft.Container(
                     content=ft.TextButton(
-                        text=label + arrow,
+                        content=ft.Text(label + arrow, size=12, weight=ft.FontWeight.BOLD),
                         style=ft.ButtonStyle(
                             padding=ft.Padding(4, 0, 4, 0),
                             text_style=ft.TextStyle(size=12, weight=ft.FontWeight.BOLD),
@@ -54,7 +54,7 @@ class ConstituentsPage:
             content=ft.Row(header_cells, spacing=0),
             bgcolor=ft.Colors.GREY_100,
             padding=ft.Padding(12, 8, 12, 8),
-            border_radius=ft.border_radius.only(top_left=8, top_right=8),
+            border_radius=ft.BorderRadius(8, 8, 0, 0),
         )
 
     def _on_sort(self, field: str):
@@ -100,7 +100,7 @@ class ConstituentsPage:
                         ft.Container(
                             content=ft.Text(sector, size=10, color=ft.Colors.WHITE),
                             bgcolor=sector_color,
-                            border_radius=4,
+                            border_radius=ft.BorderRadius(4, 4, 4, 4),
                             padding=ft.Padding(6, 2, 6, 2),
                             width=80,
                             alignment=ft.Alignment(0, 0),
@@ -121,7 +121,12 @@ class ConstituentsPage:
                     spacing=0,
                 ),
                 padding=ft.Padding(12, 10, 12, 10),
-                border=ft.border.only(bottom=ft.border.BorderSide(1, ft.Colors.GREY_100)),
+                border=ft.Border(
+                    top=ft.BorderSide(0, ft.Colors.TRANSPARENT),
+                    right=ft.BorderSide(0, ft.Colors.TRANSPARENT),
+                    bottom=ft.BorderSide(1, ft.Colors.GREY_100),
+                    left=ft.BorderSide(0, ft.Colors.TRANSPARENT),
+                ),
                 bgcolor=ft.Colors.WHITE,
             )
             rows.append(row)

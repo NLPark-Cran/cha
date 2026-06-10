@@ -34,7 +34,6 @@ class ChaApp:
 
     def _get_session_data(self) -> dict:
         """从内存会话存储获取当前用户数据"""
-        # 通过 sys.modules 访问 main.py 中的全局变量
         import sys
         main_mod = sys.modules.get("__main__")
         if main_mod and hasattr(main_mod, "get_session_data"):
@@ -52,11 +51,7 @@ class ChaApp:
     def _on_login_click(self, e: ft.ControlEvent):
         """点击登录按钮"""
         pkce = watcha_oauth.generate_pkce()
-
-        # 构建授权 URL (code_verifier 编码在 state 中)
         auth_url = watcha_oauth.build_auth_url(pkce, scope="read")
-
-        # 使用 JavaScript 跳转 (替换当前页面)
         self.page.launch_url(auth_url, web_popup_window_name="_self")
 
     def _on_logout_click(self, e: ft.ControlEvent):
@@ -91,7 +86,7 @@ class ChaApp:
                 ),
                 items=[
                     ft.PopupMenuItem(
-                        text="退出登录",
+                        content=ft.Text("退出登录"),
                         icon=ft.Icons.LOGOUT,
                         on_click=self._on_logout_click,
                     ),
@@ -99,7 +94,7 @@ class ChaApp:
             )
         else:
             return ft.ElevatedButton(
-                "观猹登录",
+                content=ft.Text("观猹登录"),
                 icon=ft.Icons.LOGIN,
                 on_click=self._on_login_click,
                 style=ft.ButtonStyle(

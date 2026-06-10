@@ -70,7 +70,6 @@ class DashboardPage:
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
                 padding=ft.Padding(24, 24, 24, 24),
-                width=380,
             ),
             elevation=2,
             bgcolor=ft.Colors.WHITE,
@@ -128,13 +127,13 @@ class DashboardPage:
                                 ft.Container(
                                     bgcolor="#E74C3C",
                                     height=6,
-                                    border_radius=3,
+                                    border_radius=ft.BorderRadius(3, 3, 3, 3),
                                     width=up_pct * 2.5,
                                 ),
                                 ft.Container(
                                     bgcolor="#27AE60",
                                     height=6,
-                                    border_radius=3,
+                                    border_radius=ft.BorderRadius(3, 3, 3, 3),
                                     width=down_pct * 2.5,
                                 ),
                             ],
@@ -144,7 +143,6 @@ class DashboardPage:
                     alignment=ft.MainAxisAlignment.CENTER,
                 ),
                 padding=ft.Padding(20, 20, 20, 20),
-                width=280,
             ),
             elevation=2,
             bgcolor=ft.Colors.WHITE,
@@ -184,7 +182,6 @@ class DashboardPage:
                     spacing=10,
                 ),
                 padding=ft.Padding(16, 16, 16, 16),
-                width=300,
             ),
             elevation=2,
             bgcolor=ft.Colors.WHITE,
@@ -212,9 +209,14 @@ class DashboardPage:
                 ft.Container(
                     content=ft.Text(f"{h['value']:.1f}", size=10, color=color),
                     bgcolor=ft.Colors.WHITE,
-                    border_radius=4,
+                    border_radius=ft.BorderRadius(4, 4, 4, 4),
                     padding=ft.Padding(6, 2, 6, 2),
-                    border=ft.border.all(1, ft.Colors.GREY_200),
+                    border=ft.Border(
+                        top=ft.BorderSide(1, ft.Colors.GREY_200),
+                        right=ft.BorderSide(1, ft.Colors.GREY_200),
+                        bottom=ft.BorderSide(1, ft.Colors.GREY_200),
+                        left=ft.BorderSide(1, ft.Colors.GREY_200),
+                    ),
                 )
             )
 
@@ -248,8 +250,8 @@ class DashboardPage:
                 # 第一行: 指数卡片 + 涨跌分布
                 ft.Row(
                     [
-                        self._build_index_card(),
-                        self._build_market_breadth(),
+                        ft.Container(content=self._build_index_card(), expand=1),
+                        ft.Container(content=self._build_market_breadth(), expand=1),
                     ],
                     wrap=True,
                     spacing=16,
@@ -260,9 +262,9 @@ class DashboardPage:
                 # 第二行: 领涨领跌 + 走势图
                 ft.Row(
                     [
-                        self._build_top_movers("🔥 领涨榜", data.get("top_gainers", []), True),
-                        self._build_top_movers("❄️ 领跌榜", data.get("top_losers", []), False),
-                        self._build_intraday_chart(),
+                        ft.Container(content=self._build_top_movers("🔥 领涨榜", data.get("top_gainers", []), True), expand=1),
+                        ft.Container(content=self._build_top_movers("❄️ 领跌榜", data.get("top_losers", []), False), expand=1),
+                        ft.Container(content=self._build_intraday_chart(), expand=2),
                     ],
                     wrap=True,
                     spacing=16,

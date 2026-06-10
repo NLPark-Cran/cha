@@ -44,7 +44,7 @@ class SectorAnalysisPage:
                                         width=12,
                                         height=12,
                                         bgcolor=color,
-                                        border_radius=6,
+                                        border_radius=ft.BorderRadius(6, 6, 6, 6),
                                     ),
                                     ft.Text(sector_name, size=16, weight=ft.FontWeight.BOLD),
                                 ],
@@ -76,7 +76,6 @@ class SectorAnalysisPage:
                         spacing=4,
                     ),
                     padding=ft.Padding(16, 16, 16, 16),
-                    width=260,
                 ),
                 elevation=2,
                 bgcolor=ft.Colors.WHITE,
@@ -112,7 +111,7 @@ class SectorAnalysisPage:
                     cells=[
                         ft.DataCell(
                             ft.Row([
-                                ft.Container(width=10, height=10, bgcolor=info["color"], border_radius=5),
+                                ft.Container(width=10, height=10, bgcolor=info["color"], border_radius=ft.BorderRadius(5, 5, 5, 5)),
                                 ft.Text(sector_name),
                             ], spacing=8)
                         ),
@@ -139,8 +138,13 @@ class SectorAnalysisPage:
                         ft.DataColumn(ft.Text("总市值", weight=ft.FontWeight.BOLD)),
                     ],
                     rows=rows,
-                    border=ft.border.all(1, ft.Colors.GREY_200),
-                    border_radius=8,
+                    border=ft.Border(
+                        top=ft.BorderSide(1, ft.Colors.GREY_200),
+                        right=ft.BorderSide(1, ft.Colors.GREY_200),
+                        bottom=ft.BorderSide(1, ft.Colors.GREY_200),
+                        left=ft.BorderSide(1, ft.Colors.GREY_200),
+                    ),
+                    border_radius=ft.BorderRadius(8, 8, 8, 8),
                 ),
                 padding=ft.Padding(16, 16, 16, 16),
             ),

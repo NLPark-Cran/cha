@@ -161,7 +161,7 @@ class ChartPage:
                     data=s.get("code"),
                     on_click=self._on_stock_select,
                     bgcolor=config.BRAND_COLOR if is_selected else ft.Colors.GREY_200,
-                    label_style=ft.TextStyle(
+                    label_text_style=ft.TextStyle(
                         color=ft.Colors.WHITE if is_selected else ft.Colors.GREY_700,
                         size=12,
                     ),
@@ -173,7 +173,7 @@ class ChartPage:
             is_active = self.period == p
             period_buttons.append(
                 ft.ElevatedButton(
-                    text=label,
+                    content=ft.Text(label),
                     data=p,
                     on_click=self._on_period_change,
                     style=ft.ButtonStyle(
