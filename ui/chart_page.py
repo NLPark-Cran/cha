@@ -148,7 +148,7 @@ class ChartPage:
         for p, label in [("daily", "日线"), ("weekly", "周线"), ("monthly", "月线")]:
             is_active = self.period == p
             period_buttons.append(
-                ft.ElevatedButton(
+                ft.Button(
                     content=ft.Text(label),
                     data=p,
                     on_click=self._on_period_change,

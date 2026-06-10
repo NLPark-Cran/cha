@@ -60,7 +60,7 @@ class ChaApp:
         main_mod = sys.modules.get("__main__")
         if main_mod and hasattr(main_mod, "clear_session"):
             main_mod.clear_session(self.page.session.id)
-        self.page.open(ft.SnackBar(content=ft.Text("已退出登录")))
+        self.page.show_dialog(ft.SnackBar(content=ft.Text("已退出登录")))
         self.page.update()
 
     def _build_user_widget(self) -> ft.Control:
@@ -92,15 +92,15 @@ class ChaApp:
                 ],
             )
         else:
-            return ft.ElevatedButton(
+            return ft.Button(
                 content=ft.Text("登录", size=12),
                 icon=ft.Icons.LOGIN,
-                icon_size=16,
                 on_click=self._on_login_click,
                 style=ft.ButtonStyle(
                     bgcolor=config.BRAND_COLOR,
                     color=ft.Colors.WHITE,
                     padding=ft.Padding(10, 6, 10, 6),
+                    icon_size=16,
                 ),
             )
 

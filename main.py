@@ -69,7 +69,7 @@ def handle_oauth_callback(page: ft.Page):
 
     if error:
         print(f"[OAuth] Error from Watcha: {error} - {error_desc}")
-        page.open(ft.SnackBar(content=ft.Text(f"登录失败: {error}")))
+        page.show_dialog(ft.SnackBar(content=ft.Text(f"登录失败: {error}")))
         return
 
     if not code or not state:
@@ -79,7 +79,7 @@ def handle_oauth_callback(page: ft.Page):
     token_data = watcha_oauth.exchange_code(code, state)
     if not token_data or "access_token" not in token_data:
         print(f"[OAuth] Failed to exchange code: {token_data}")
-        page.open(ft.SnackBar(content=ft.Text("换取 Token 失败，请重试")))
+        page.show_dialog(ft.SnackBar(content=ft.Text("换取 Token 失败，请重试")))
         return
 
     access_token = token_data["access_token"]
@@ -89,7 +89,7 @@ def handle_oauth_callback(page: ft.Page):
     # 获取用户信息
     userinfo = watcha_oauth.get_userinfo(access_token)
     if not userinfo:
-        page.open(ft.SnackBar(content=ft.Text("获取用户信息失败")))
+        page.show_dialog(ft.SnackBar(content=ft.Text("获取用户信息失败")))
         return
 
     # 存储到内存会话
@@ -103,7 +103,7 @@ def handle_oauth_callback(page: ft.Page):
 
     nickname = userinfo.get("nickname", "观猹用户")
     print(f"[OAuth] Login success: {nickname}")
-    page.open(ft.SnackBar(content=ft.Text(f"欢迎回来，{nickname}!")))
+    page.show_dialog(ft.SnackBar(content=ft.Text(f"欢迎回来，{nickname}!")))
 
     # 清除 URL 中的 code 参数 (刷新页面到根路径)
     page.launch_url("/", web_popup_window_name="_self")
