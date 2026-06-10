@@ -181,7 +181,7 @@ class ChaApp:
                     label="走势图",
                 ),
                 ft.NavigationBarDestination(
-                    icon=ft.Icons.PIE_CHART_OUTLINED,
+                    icon=ft.Icons.PIE_CHART_OUTLINE_OUTLINED,
                     selected_icon=ft.Icons.PIE_CHART,
                     label="板块分析",
                 ),
