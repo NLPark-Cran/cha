@@ -12,6 +12,9 @@ from ui.chart_page import ChartPage
 from ui.sector_analysis import SectorAnalysisPage
 from ui.about import AboutPage
 from ui.profile import ProfilePage
+from ui.portfolio import PortfolioPage
+from ui.news_page import NewsPage
+from ui.signals_page import SignalsPage
 
 
 class ChaApp:
