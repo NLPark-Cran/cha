@@ -4,18 +4,43 @@
 
 import asyncio
 import json
-import flet as ft
+import shutil
 import sys
 
 sys.path.insert(0, '.')
 
+import flet as ft
+from flet_web import get_package_web_dir
+
+# Replace flet default favicon with our branded one
+web_dir = get_package_web_dir()
+shutil.copy("assets/favicon.png", f"{web_dir}/favicon.png")
+
+import config
 from ui.app import ChaApp
 from data.fetcher import fetch_constituents_data
 from data.calculator import calculator
 from data.cache import cache
 from data.storage import storage
 from auth.oauth import watcha_oauth
-import config
+
+# 内存会话存储: session_id -> {token, userinfo}
+_user_sessions: dict = {}
+
+
+def get_session_data(session_id: str) -> dict:
+    """获取会话数据"""
+    return _user_sessions.get(session_id, {})
+
+
+def set_session_data(session_id: str, data: dict):
+    """设置会话数据"""
+    _user_sessions[session_id] = data
+
+
+def clear_session(session_id: str):
+    """清除会话数据"""
+    _user_sessions.pop(session_id, None)
 
 
 async def background_refresh(page: ft.Page):
@@ -35,36 +60,23 @@ async def background_refresh(page: ft.Page):
 
 
 def handle_oauth_callback(page: ft.Page):
-    """处理 OAuth 回调 (从 query_params 中提取 code)"""
-    query = page.query_params
-    code = query.get("code")
-    state = query.get("state")
-    error = query.get("error")
+    """处理 OAuth 回调 (从 query 中提取 code 和 state)"""
+    query_dict = page.query.to_dict
+    code = query_dict.get("code")
+    state = query_dict.get("state")
+    error = query_dict.get("error")
+    error_desc = query_dict.get("error_description", "")
 
     if error:
-        print(f"[OAuth] Error from Watcha: {error} - {query.get('error_description', '')}")
+        print(f"[OAuth] Error from Watcha: {error} - {error_desc}")
         page.open(ft.SnackBar(content=ft.Text(f"登录失败: {error}")))
         return
 
-    if not code:
+    if not code or not state:
         return
 
-    # 从 client_storage 中取出之前保存的 PKCE 参数和 state
-    stored_state = page.client_storage.get("watcha_oauth_state")
-    stored_verifier = page.client_storage.get("watcha_code_verifier")
-
-    if not stored_verifier:
-        print("[OAuth] No code_verifier found in storage")
-        page.open(ft.SnackBar(content=ft.Text("登录状态丢失，请重试")))
-        return
-
-    if stored_state and stored_state != state:
-        print(f"[OAuth] State mismatch: {stored_state} != {state}")
-        page.open(ft.SnackBar(content=ft.Text("登录验证失败，请重试")))
-        return
-
-    # 换取 token
-    token_data = watcha_oauth.exchange_code(code, stored_verifier)
+    # 用 code + state 换取 token (state 中包含 code_verifier)
+    token_data = watcha_oauth.exchange_code(code, state)
     if not token_data or "access_token" not in token_data:
         print(f"[OAuth] Failed to exchange code: {token_data}")
         page.open(ft.SnackBar(content=ft.Text("换取 Token 失败，请重试")))
@@ -80,19 +92,20 @@ def handle_oauth_callback(page: ft.Page):
         page.open(ft.SnackBar(content=ft.Text("获取用户信息失败")))
         return
 
-    # 存储登录状态
-    page.client_storage.set("watcha_access_token", access_token)
-    page.client_storage.set("watcha_refresh_token", refresh_token or "")
-    page.client_storage.set("watcha_userinfo", json.dumps(userinfo))
+    # 存储到内存会话
+    session_id = page.session.id
+    set_session_data(session_id, {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "expires_in": expires_in,
+        "userinfo": userinfo,
+    })
 
-    # 清理临时参数
-    page.client_storage.remove("watcha_oauth_state")
-    page.client_storage.remove("watcha_code_verifier")
+    nickname = userinfo.get("nickname", "观猹用户")
+    print(f"[OAuth] Login success: {nickname}")
+    page.open(ft.SnackBar(content=ft.Text(f"欢迎回来，{nickname}!")))
 
-    print(f"[OAuth] Login success: {userinfo.get('nickname')}")
-    page.open(ft.SnackBar(content=ft.Text(f"欢迎回来，{userinfo.get('nickname', '观猹用户')}!")))
-
-    # 清除 URL 中的 code 参数 (刷新页面)
+    # 清除 URL 中的 code 参数 (刷新页面到根路径)
     page.launch_url("/", web_window_name="_self")
 
 

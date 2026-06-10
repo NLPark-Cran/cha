@@ -69,11 +69,11 @@ class DashboardPage:
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
-                padding=ft.padding.all(24),
+                padding=ft.Padding(24, 24, 24, 24),
                 width=380,
             ),
             elevation=2,
-            color=ft.Colors.WHITE,
+            bgcolor=ft.Colors.WHITE,
         )
 
     def _build_market_breadth(self) -> ft.Control:
@@ -143,11 +143,11 @@ class DashboardPage:
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                 ),
-                padding=ft.padding.all(20),
+                padding=ft.Padding(20, 20, 20, 20),
                 width=280,
             ),
             elevation=2,
-            color=ft.Colors.WHITE,
+            bgcolor=ft.Colors.WHITE,
         )
 
     def _build_top_movers(self, title: str, stocks: list, gainers: bool = True) -> ft.Control:
@@ -183,11 +183,11 @@ class DashboardPage:
                     ],
                     spacing=10,
                 ),
-                padding=ft.padding.all(16),
+                padding=ft.Padding(16, 16, 16, 16),
                 width=300,
             ),
             elevation=2,
-            color=ft.Colors.WHITE,
+            bgcolor=ft.Colors.WHITE,
         )
 
     def _build_intraday_chart(self) -> ft.Control:
@@ -197,8 +197,8 @@ class DashboardPage:
             return ft.Card(
                 content=ft.Container(
                     content=ft.Text("数据收集中，走势图将在刷新后显示...", color=ft.Colors.GREY_400),
-                    padding=ft.padding.all(40),
-                    alignment=ft.alignment.center,
+                    padding=ft.Padding(40, 40, 40, 40),
+                    alignment=ft.Alignment(0, 0),
                 ),
                 elevation=2,
             )
@@ -213,7 +213,7 @@ class DashboardPage:
                     content=ft.Text(f"{h['value']:.1f}", size=10, color=color),
                     bgcolor=ft.Colors.WHITE,
                     border_radius=4,
-                    padding=ft.padding.symmetric(horizontal=6, vertical=2),
+                    padding=ft.Padding(6, 2, 6, 2),
                     border=ft.border.all(1, ft.Colors.GREY_200),
                 )
             )
@@ -233,10 +233,10 @@ class DashboardPage:
                         ft.Row(dots, wrap=True, spacing=4, run_spacing=4),
                     ],
                 ),
-                padding=ft.padding.all(16),
+                padding=ft.Padding(16, 16, 16, 16),
             ),
             elevation=2,
-            color=ft.Colors.WHITE,
+            bgcolor=ft.Colors.WHITE,
         )
 
     def build(self) -> ft.Control:

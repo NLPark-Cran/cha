@@ -40,20 +40,20 @@ class ConstituentsPage:
                     content=ft.TextButton(
                         text=label + arrow,
                         style=ft.ButtonStyle(
-                            padding=ft.padding.symmetric(horizontal=4),
+                            padding=ft.Padding(4, 0, 4, 0),
                             text_style=ft.TextStyle(size=12, weight=ft.FontWeight.BOLD),
                         ),
                         on_click=lambda e, f=field: self._on_sort(f),
                     ),
                     width=width,
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment(0, 0),
                 )
             )
 
         return ft.Container(
             content=ft.Row(header_cells, spacing=0),
             bgcolor=ft.Colors.GREY_100,
-            padding=ft.padding.symmetric(vertical=8, horizontal=12),
+            padding=ft.Padding(12, 8, 12, 8),
             border_radius=ft.border_radius.only(top_left=8, top_right=8),
         )
 
@@ -101,9 +101,9 @@ class ConstituentsPage:
                             content=ft.Text(sector, size=10, color=ft.Colors.WHITE),
                             bgcolor=sector_color,
                             border_radius=4,
-                            padding=ft.padding.symmetric(horizontal=6, vertical=2),
+                            padding=ft.Padding(6, 2, 6, 2),
                             width=80,
-                            alignment=ft.alignment.center,
+                            alignment=ft.Alignment(0, 0),
                         ),
                         ft.Text(f"{stock.get('price',0):.2f}", size=13, width=80, text_align=ft.TextAlign.RIGHT),
                         ft.Text(
@@ -120,7 +120,7 @@ class ConstituentsPage:
                     ],
                     spacing=0,
                 ),
-                padding=ft.padding.symmetric(vertical=10, horizontal=12),
+                padding=ft.Padding(12, 10, 12, 10),
                 border=ft.border.only(bottom=ft.border.BorderSide(1, ft.Colors.GREY_100)),
                 bgcolor=ft.Colors.WHITE,
             )

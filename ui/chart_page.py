@@ -24,8 +24,8 @@ class ChartPage:
         if len(history) < 2:
             return ft.Container(
                 content=ft.Text("数据收集中，请稍候...", color=ft.Colors.GREY_400),
-                alignment=ft.alignment.center,
-                padding=ft.padding.all(40),
+                alignment=ft.Alignment(0, 0),
+                padding=ft.Padding(40, 40, 40, 40),
             )
 
         times = [h["time"] for h in history]
@@ -65,8 +65,8 @@ class ChartPage:
         if not stocks:
             return ft.Container(
                 content=ft.Text("暂无数据", color=ft.Colors.GREY_400),
-                alignment=ft.alignment.center,
-                padding=ft.padding.all(40),
+                alignment=ft.Alignment(0, 0),
+                padding=ft.Padding(40, 40, 40, 40),
             )
 
         # 默认选第一只
@@ -78,8 +78,8 @@ class ChartPage:
         if not history:
             return ft.Container(
                 content=ft.Text(f"无法获取 {name} 的历史数据", color=ft.Colors.GREY_400),
-                alignment=ft.alignment.center,
-                padding=ft.padding.all(40),
+                alignment=ft.Alignment(0, 0),
+                padding=ft.Padding(40, 40, 40, 40),
             )
 
         dates = [h["date"] for h in history]
@@ -178,8 +178,8 @@ class ChartPage:
                     on_click=self._on_period_change,
                     style=ft.ButtonStyle(
                         bgcolor=config.BRAND_COLOR if is_active else ft.Colors.GREY_200,
-                        foreground_color=ft.Colors.WHITE if is_active else ft.Colors.GREY_700,
-                        padding=ft.padding.symmetric(horizontal=16, vertical=8),
+                        color=ft.Colors.WHITE if is_active else ft.Colors.GREY_700,
+                        padding=ft.Padding(16, 8, 16, 8),
                     ),
                 )
             )

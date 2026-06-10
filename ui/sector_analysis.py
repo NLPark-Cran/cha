@@ -75,11 +75,11 @@ class SectorAnalysisPage:
                         ],
                         spacing=4,
                     ),
-                    padding=ft.padding.all(16),
+                    padding=ft.Padding(16, 16, 16, 16),
                     width=260,
                 ),
                 elevation=2,
-                color=ft.Colors.WHITE,
+                bgcolor=ft.Colors.WHITE,
             )
             cards.append(card)
 
@@ -142,7 +142,7 @@ class SectorAnalysisPage:
                     border=ft.border.all(1, ft.Colors.GREY_200),
                     border_radius=8,
                 ),
-                padding=ft.padding.all(16),
+                padding=ft.Padding(16, 16, 16, 16),
             ),
             elevation=2,
         )

@@ -29,43 +29,42 @@ class ChaApp:
         self.content_area = ft.Container(
             content=self.pages[0].build(),
             expand=True,
-            padding=ft.padding.all(20),
+            padding=ft.Padding(20, 20, 20, 20),
         )
 
-    def _get_userinfo(self) -> dict:
-        """从 client_storage 获取用户信息"""
-        try:
-            raw = self.page.client_storage.get("watcha_userinfo")
-            if raw:
-                return json.loads(raw)
-        except Exception:
-            pass
+    def _get_session_data(self) -> dict:
+        """从内存会话存储获取当前用户数据"""
+        # 通过 sys.modules 访问 main.py 中的全局变量
+        import sys
+        main_mod = sys.modules.get("__main__")
+        if main_mod and hasattr(main_mod, "get_session_data"):
+            return main_mod.get_session_data(self.page.session.id)
         return {}
 
     def _is_logged_in(self) -> bool:
         """检查是否已登录"""
-        return bool(self.page.client_storage.get("watcha_access_token"))
+        return bool(self._get_session_data().get("access_token"))
+
+    def _get_userinfo(self) -> dict:
+        """获取用户信息"""
+        return self._get_session_data().get("userinfo", {})
 
     def _on_login_click(self, e: ft.ControlEvent):
         """点击登录按钮"""
         pkce = watcha_oauth.generate_pkce()
-        state = watcha_oauth.generate_state()
 
-        # 保存到 client_storage
-        self.page.client_storage.set("watcha_oauth_state", state)
-        self.page.client_storage.set("watcha_code_verifier", pkce["code_verifier"])
-
-        # 构建授权 URL
-        auth_url = watcha_oauth.build_auth_url(state, pkce, scope="read")
+        # 构建授权 URL (code_verifier 编码在 state 中)
+        auth_url = watcha_oauth.build_auth_url(pkce, scope="read")
 
         # 使用 JavaScript 跳转 (替换当前页面)
         self.page.launch_url(auth_url, web_window_name="_self")
 
     def _on_logout_click(self, e: ft.ControlEvent):
         """登出"""
-        self.page.client_storage.remove("watcha_access_token")
-        self.page.client_storage.remove("watcha_refresh_token")
-        self.page.client_storage.remove("watcha_userinfo")
+        import sys
+        main_mod = sys.modules.get("__main__")
+        if main_mod and hasattr(main_mod, "clear_session"):
+            main_mod.clear_session(self.page.session.id)
         self.page.open(ft.SnackBar(content=ft.Text("已退出登录")))
         self.page.update()
 
@@ -105,8 +104,8 @@ class ChaApp:
                 on_click=self._on_login_click,
                 style=ft.ButtonStyle(
                     bgcolor=config.BRAND_COLOR,
-                    foreground_color=ft.Colors.WHITE,
-                    padding=ft.padding.symmetric(horizontal=16, vertical=8),
+                    color=ft.Colors.WHITE,
+                    padding=ft.Padding(16, 8, 16, 8),
                 ),
             )
 
@@ -152,11 +151,11 @@ class ChaApp:
                         ],
                         spacing=4,
                     ),
-                    padding=ft.padding.only(right=12),
+                    padding=ft.Padding(0, 0, 12, 0),
                 ),
                 ft.Container(
                     content=self._build_user_widget(),
-                    padding=ft.padding.only(right=16),
+                    padding=ft.Padding(0, 0, 16, 0),
                 ),
             ],
         )

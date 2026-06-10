@@ -1,10 +1,12 @@
 """
 观猹 (watcha.cn) OAuth2.0 登录模块
 支持 PKCE + Authorization Code 流程
+通过 state 参数传递 code_verifier，无需 client_storage
 """
 
 import base64
 import hashlib
+import json
 import os
 import secrets
 import urllib.parse
@@ -22,6 +24,25 @@ WATCHA_INTROSPECT_URL = "https://watcha.cn/oauth/api/introspect"
 
 # 回调地址 (需与注册 domain 匹配)
 REDIRECT_URI = "https://cha.hub.tt2.li"
+
+
+def _encode_state(verifier: str, nonce: str) -> str:
+    """将 verifier 和 nonce 编码进 state 字符串"""
+    payload = json.dumps({"v": verifier, "n": nonce})
+    return base64.urlsafe_b64encode(payload.encode()).decode().rstrip("=")
+
+
+def _decode_state(state: str) -> Optional[Dict[str, str]]:
+    """从 state 字符串解析 verifier 和 nonce"""
+    try:
+        # 补齐 base64 padding
+        padding = 4 - len(state) % 4
+        if padding != 4:
+            state += "=" * padding
+        payload = base64.urlsafe_b64decode(state.encode()).decode()
+        return json.loads(payload)
+    except Exception:
+        return None
 
 
 class WatchaOAuth:
@@ -45,13 +66,10 @@ class WatchaOAuth:
             "code_challenge_method": "S256",
         }
 
-    @staticmethod
-    def generate_state() -> str:
-        """生成随机 state"""
-        return secrets.token_urlsafe(16)
-
-    def build_auth_url(self, state: str, pkce: Dict[str, str], scope: str = "read") -> str:
-        """构建观猹授权页面 URL"""
+    def build_auth_url(self, pkce: Dict[str, str], scope: str = "read") -> str:
+        """构建观猹授权页面 URL (code_verifier 编码在 state 中)"""
+        nonce = secrets.token_urlsafe(8)
+        state = _encode_state(pkce["code_verifier"], nonce)
         params = {
             "response_type": "code",
             "client_id": WATCHA_CLIENT_ID,
@@ -65,8 +83,14 @@ class WatchaOAuth:
         query = urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
         return f"{WATCHA_AUTH_URL}?{query}"
 
-    def exchange_code(self, code: str, code_verifier: str) -> Optional[Dict]:
-        """用授权码换取 Token"""
+    def exchange_code(self, code: str, state: str) -> Optional[Dict]:
+        """用授权码换取 Token (从 state 解析 code_verifier)"""
+        decoded = _decode_state(state)
+        if not decoded or "v" not in decoded:
+            print("[OAuth] Failed to decode state")
+            return None
+
+        code_verifier = decoded["v"]
         data = {
             "grant_type": "authorization_code",
             "code": code,
